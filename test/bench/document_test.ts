@@ -15,7 +15,7 @@
  */
 import { assert } from 'chai';
 import * as Benchmark from 'benchmark';
-import { JSONArray, Text, Document } from '@yorkie-js-sdk/src/yorkie';
+import { JSONArray, Text, Document, Client } from '@yorkie-js-sdk/src/yorkie';
 import { MaxTimeTicket } from '@yorkie-js-sdk/src/document/time/ticket';
 import { InitialCheckpoint } from '@yorkie-js-sdk/src/document/change/checkpoint';
 
@@ -28,6 +28,16 @@ suite
       assert.equal('{}', doc.toSortedJSON());
       assert.equal(doc.getCheckpoint(), InitialCheckpoint);
       assert.isFalse(doc.hasLocalChanges());
+    }
+  })
+  .add('status test', async function () {
+    const client = new Client('http://localhost:8080');
+    await client.activate();
+    for (let i = 0; i < 100; i++) {
+      const doc = Document.create('test-doc');
+      assert.throws(async () => await client.sync());
+      await client.attach(doc);
+      assert.doesNotThrow(async () => await client.sync());
     }
   })
   .add('garbage collection test for large size text 1', function () {
